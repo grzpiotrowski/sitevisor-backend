@@ -11,7 +11,9 @@ kubectl create -f 'https://strimzi.io/install/latest?namespace=kafka' -n kafka
 ```
 
 **Create a new Kafka custom resource:**
+
 This sets up a small persistent Apache Kafka Cluster with one node for Apache Zookeeper and Apache Kafka:
+
 ```bash
 echo "
 apiVersion: kafka.strimzi.io/v1beta2
