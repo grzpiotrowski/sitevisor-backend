@@ -5,6 +5,7 @@ from sitevisorapi import views
 
 router = DefaultRouter()
 router.register(r'rooms', views.RoomViewSet)
+router.register(r'sensors', views.SensorViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
