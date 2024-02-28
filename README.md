@@ -7,6 +7,7 @@ This is the backend server for the [SiteVisor](https://github.com/grzpiotrowski/
 - [Django REST Framework Documentation - Quickstart](https://www.django-rest-framework.org/tutorial/quickstart/)
 - [Django REST API Tutorial: The Ultimate Guide](https://www.moesif.com/blog/technical/api-development/Django-REST-API-Tutorial/)
 - [Builescu, Daniel - Django and REST APIs: An Essential Guide for Seamless Integration and Development - Medium](https://medium.com/p/a877ff8234d4)
+- [Smaine Kahlouch - CloudNativePG: An easy way to run PostgreSQL on Kubernetes](https://blog.ogenki.io/post/cnpg/)
 - [Emmanuel King Kasulani - How to Dockerize a Django Application - Medium](https://medium.com/backticks-tildes/how-to-dockerize-a-django-application-a42df0cb0a99)
 - [confluent-kafka-python - Confluent's Python Client for Apache Kafka](https://github.com/confluentinc/confluent-kafka-python)
 - [Confluent - Developer - Getting Started with Apache Kafka and Python](https://developer.confluent.io/get-started/python/#build-consumer)
