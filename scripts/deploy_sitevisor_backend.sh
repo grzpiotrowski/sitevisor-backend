@@ -100,10 +100,6 @@ spec:
       labels:
         app: sitevisor-backend
     spec:
-      initContainers:
-      - name: apply-migrations
-        image: sitevisor-backend:dev
-        command: ['python', 'manage.py', 'migrate']
       containers:
       - name: sitevisor-backend
         image: sitevisor-backend:dev

@@ -80,6 +80,8 @@ WSGI_APPLICATION = 'sitevisor.wsgi.application'
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5432',
+    'http://localhost:5173',
+    'http://localhost:3000'
 ]
 
 # Database

@@ -8,6 +8,7 @@ class Point(models.Model):
 class Room(models.Model):
     name = models.CharField(max_length=255)
     level = models.IntegerField()
+    color = models.IntegerField()
     opacity = models.FloatField()
     point1 = models.ForeignKey(Point, related_name='room_point1', on_delete=models.CASCADE)
     point2 = models.ForeignKey(Point, related_name='room_point2', on_delete=models.CASCADE)

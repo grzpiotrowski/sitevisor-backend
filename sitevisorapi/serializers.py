@@ -12,7 +12,17 @@ class RoomSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Room
-        fields = ['id', 'name', 'level', 'opacity', 'point1', 'point2', 'height']
+        fields = ['id', 'name', 'level', 'color', 'opacity', 'point1', 'point2', 'height']
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret['color'] = f'#{instance.color:06x}'
+        return ret
+
+    def to_internal_value(self, data):
+        if 'color' in data and isinstance(data['color'], str):
+            data['color'] = int(data['color'].lstrip('#'), 16)
+        return super().to_internal_value(data)
 
     def create(self, validated_data):
         point1_data = validated_data.pop('point1')
@@ -28,6 +38,7 @@ class RoomSerializer(serializers.ModelSerializer):
         
         instance.name = validated_data.get('name', instance.name)
         instance.level = validated_data.get('level', instance.level)
+        instance.color = validated_data.get('color', instance.color)
         instance.opacity = validated_data.get('opacity', instance.opacity)
         instance.height = validated_data.get('height', instance.height)
 
