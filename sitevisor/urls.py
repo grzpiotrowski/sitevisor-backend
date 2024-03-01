@@ -8,6 +8,7 @@ router.register(r'rooms', views.RoomViewSet)
 router.register(r'sensors', views.SensorViewSet)
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
+    path('admin/', admin.site.urls),
+    path('api/register/', views.RegistrationAPIView.as_view()),
 ]
