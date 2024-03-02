@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Room, Sensor, Point
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
 
 class PointSerializer(serializers.ModelSerializer):
     class Meta:
@@ -101,4 +102,3 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             password=validated_data['password'],
         )
         return user
-    
