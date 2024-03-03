@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from .models import Room, Sensor, Point
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
 
 class PointSerializer(serializers.ModelSerializer):
     class Meta:
@@ -86,3 +88,17 @@ class SensorSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(max_length=128, min_length=8, write_only=True)
+
+    class Meta:
+        model = User
+        fields = ('username', 'password')
+
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            password=validated_data['password'],
+        )
+        return user
