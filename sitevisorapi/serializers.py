@@ -1,7 +1,6 @@
 from rest_framework import serializers
-from .models import Room, Sensor, Point
+from .models import Room, Sensor, Project, Point
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate
 
 class PointSerializer(serializers.ModelSerializer):
     class Meta:
@@ -14,7 +13,7 @@ class RoomSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Room
-        fields = ['id', 'name', 'level', 'color', 'opacity', 'point1', 'point2', 'height']
+        fields = ['id', 'name', 'project', 'level', 'color', 'opacity', 'point1', 'point2', 'height']
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
@@ -65,7 +64,7 @@ class SensorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Sensor
-        fields = ['id', 'name', 'level', 'position']
+        fields = ['id', 'name', 'project', 'level', 'position']
 
     def create(self, validated_data):
         position_data = validated_data.pop('position')
@@ -88,6 +87,25 @@ class SensorSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username']
+
+class ProjectSerializer(serializers.ModelSerializer):
+    owner = UserSerializer(read_only=True)
+    rooms = RoomSerializer(many=True, read_only=True)
+    sensors = SensorSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Project
+        fields = ['id', 'name', 'owner', 'rooms', 'sensors']
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        project = Project.objects.create(owner=user, **validated_data)
+        return project
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=128, min_length=8, write_only=True)

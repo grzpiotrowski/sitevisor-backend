@@ -1,8 +1,8 @@
 from rest_framework import viewsets
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from .models import Room, Sensor
-from .serializers import RoomSerializer, SensorSerializer, UserRegistrationSerializer
+from .models import Room, Sensor, Project
+from .serializers import RoomSerializer, SensorSerializer, ProjectSerializer, UserRegistrationSerializer
 from django.contrib.auth.models import User
 
 class RoomViewSet(viewsets.ModelViewSet):
@@ -13,6 +13,11 @@ class RoomViewSet(viewsets.ModelViewSet):
 class SensorViewSet(viewsets.ModelViewSet):
     queryset = Sensor.objects.all()
     serializer_class = SensorSerializer
+    permission_classes = [IsAuthenticated]
+
+class ProjectViewSet(viewsets.ModelViewSet):
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
     permission_classes = [IsAuthenticated]
 
 class RegistrationAPIView(CreateAPIView):
