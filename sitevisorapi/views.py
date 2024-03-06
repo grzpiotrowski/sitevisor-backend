@@ -21,10 +21,24 @@ class RoomViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        project_id = self.request.query_params.get('project_id')
+        if project_id is not None:
+            queryset = queryset.filter(project_id=project_id)
+        return queryset
+
 class SensorViewSet(viewsets.ModelViewSet):
     queryset = Sensor.objects.all()
     serializer_class = SensorSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        project_id = self.request.query_params.get('project_id')
+        if project_id is not None:
+            queryset = queryset.filter(project_id=project_id)
+        return queryset
 
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
