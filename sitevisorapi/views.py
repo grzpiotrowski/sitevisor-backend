@@ -45,6 +45,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
     serializer_class = ProjectSerializer
     permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        user = self.request.user
+        return Project.objects.filter(owner=user)
+
 class RegistrationAPIView(CreateAPIView):
     serializer_class = UserRegistrationSerializer
     model = User
