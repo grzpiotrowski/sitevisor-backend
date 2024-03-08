@@ -15,7 +15,7 @@ router.register(r'projects', views.ProjectViewSet)
 urlpatterns = [
     path('api/', include(router.urls)),
     path('admin/', admin.site.urls),
-    path('api/register/', views.RegistrationAPIView.as_view()),
+    path('api/register/', views.RegistrationAPIView.as_view(), name='register'),
     path('api/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/login/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
