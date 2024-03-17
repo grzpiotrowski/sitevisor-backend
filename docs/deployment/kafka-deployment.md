@@ -1,5 +1,8 @@
 # Creating an Apache Kafka cluster
 
+## Prerequisites
+- Added `127.0.0.1 sitevisor.local` ìn `/etc/hosts`
+
 **Create a `kafka` namespace:**
 ```bash
 kubectl create namespace kafka
@@ -59,14 +62,71 @@ spec:
 " | kubectl apply -n kafka -f -
 ```
 
-## Testing
-
-Run a simple producer to send messages to a Kafka topic:
+**Create the KafkaBridge resource:**
 ```bash
-kubectl -n kafka run kafka-producer -ti --image=quay.io/strimzi/kafka:0.39.0-kafka-3.6.1 --rm=true --restart=Never -- bin/kafka-console-producer.sh --bootstrap-server kafka-sitevisor-cluster-kafka-bootstrap:9092 --topic my-topic
+echo "
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaBridge
+metadata:
+  name: kafka-bridge
+  namespace: kafka
+spec:
+  replicas: 1
+  bootstrapServers: kafka-sitevisor-cluster-kafka-bootstrap:9092
+  http:
+    port: 8088
+  consumer:
+    config:
+      auto.offset.reset: earliest
+  producer:
+    config:
+      delivery.timeout.ms: 300000
+" | kubectl apply -f -
 ```
 
-In another terminal run a cosumer to receive the messages from `my-topic` Kafka topic:
+**Expose KafkaBridge Service:**
 ```bash
-kubectl -n kafka run kafka-consumer -ti --image=quay.io/strimzi/kafka:0.39.0-kafka-3.6.1 --rm=true --restart=Never -- bin/kafka-console-consumer.sh --bootstrap-server kafka-sitevisor-cluster-kafka-bootstrap:9092 --topic my-topic --from-beginning
+echo "
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kafka-bridge
+  namespace: kafka
+spec:
+  rules:
+  - host: sitevisor.local
+    http:
+      paths:
+      - path: /topics
+        pathType: Prefix
+        backend:
+          service:
+            name: kafka-bridge-bridge-service
+            port:
+              number: 8088
+  ingressClassName: nginx
+" | kubectl apply -f -
+```
+
+**Create a test Kafka Topic:**
+```bash
+echo "
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: my-topic
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: 'kafka-sitevisor-cluster'
+spec:
+  partitions: 3
+  replicas: 1
+" | kubectl create -f -
+```
+
+**Curl a test message to Kafka:**
+```bash
+curl -X POST http://sitevisor.local:8080/topics/my-topic \
+     -H "Content-Type: application/vnd.kafka.json.v2+json" \
+     --data '{"records": [{"value": "Test message..."}]}'
 ```
