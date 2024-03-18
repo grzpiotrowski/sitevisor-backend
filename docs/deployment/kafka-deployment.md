@@ -75,6 +75,15 @@ spec:
   bootstrapServers: kafka-sitevisor-cluster-kafka-bootstrap:9092
   http:
     port: 8088
+    cors:
+      allowedMethods:
+        - GET
+        - POST
+        - DELETE
+        - ACCEPT
+        - OPTIONS
+      allowedOrigins:
+        - 'http://localhost:5173'
   consumer:
     config:
       auto.offset.reset: earliest
