@@ -5,13 +5,13 @@ set -e
 
 # Create Kind cluster
 if ! kind get clusters | grep -q '^kind$'; then
-  kind create cluster
+  ./Scripts/create_kind_cluster.sh
 else
   echo "Kind cluster 'kind' already exists"
 fi
 
 # Variables
-NAMESPACE="postgres-operator"
+POSTGRES_NAMESPACE="postgres-operator"
 OPERATOR_VERSION="1.22.1"
 SUPERUSER_SECRET_NAME="postgres-superuser-secret"
 APP_USER_SECRET_NAME="sitevisor-user-secret"
@@ -23,10 +23,11 @@ SUPERUSER_USERNAME="postgresadmin"
 SUPERUSER_PASSWORD="supersecret"
 APP_USERNAME="sitevisoruser"
 APP_PASSWORD="secret"
+HOSTNAME="localhost"
 
 # Create Namespace for PostgreSQL Operator
-echo "Creating namespace ${NAMESPACE}..."
-kubectl create namespace ${NAMESPACE} || echo "Namespace ${NAMESPACE} already exists"
+echo "Creating namespace ${POSTGRES_NAMESPACE}..."
+kubectl create namespace ${POSTGRES_NAMESPACE} || echo "Namespace ${POSTGRES_NAMESPACE} already exists"
 
 # Deploy the CNP Operator
 echo "Deploying CNP Operator version ${OPERATOR_VERSION}..."
@@ -37,13 +38,13 @@ echo "Creating secret for PostgreSQL superuser..."
 kubectl create secret generic ${SUPERUSER_SECRET_NAME} \
   --from-literal=username=${SUPERUSER_USERNAME} \
   --from-literal=password=${SUPERUSER_PASSWORD} \
-  --namespace ${NAMESPACE} || echo "Secret ${SUPERUSER_SECRET_NAME} already exists or error occurred"
+  --namespace ${POSTGRES_NAMESPACE} || echo "Secret ${SUPERUSER_SECRET_NAME} already exists or error occurred"
 
 echo "Creating secret for application database user..."
 kubectl create secret generic ${APP_USER_SECRET_NAME} \
   --from-literal=username=${APP_USERNAME} \
   --from-literal=password=${APP_PASSWORD} \
-  --namespace ${NAMESPACE} || echo "Secret ${APP_USER_SECRET_NAME} already exists or error occurred"
+  --namespace ${POSTGRES_NAMESPACE} || echo "Secret ${APP_USER_SECRET_NAME} already exists or error occurred"
 
 # Rreadiness check for the CNP operator
 echo "Checking CNP operator readiness..."
@@ -64,7 +65,7 @@ apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
   name: ${CLUSTER_NAME}
-  namespace: ${NAMESPACE}
+  namespace: ${POSTGRES_NAMESPACE}
 spec:
   instances: 1
   imageName: ${PG_IMAGE}
@@ -100,6 +101,10 @@ spec:
       labels:
         app: sitevisor-backend
     spec:
+      initContainers:
+      - name: apply-migrations
+        image: sitevisor-backend:dev
+        command: ['python', 'manage.py', 'migrate']
       containers:
       - name: sitevisor-backend
         image: sitevisor-backend:dev
@@ -116,10 +121,36 @@ spec:
   selector:
     app: sitevisor-backend
   ports:
-    - protocol: TCP
-      port: 8000
-      targetPort: 8000
-  type: NodePort
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000
+EOF
+
+kubectl apply -f - <<EOF
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sitevisor-backend-ingress
+spec:
+  rules:
+  - host: ${HOSTNAME}
+    http:
+      paths:
+      - pathType: Prefix
+        path: /api
+        backend:
+          service:
+            name: sitevisor-backend-service
+            port:
+              number: 8000
+      - pathType: Prefix
+        path: /static/rest_framework
+        backend:
+          service:
+            name: sitevisor-backend-service
+            port:
+              number: 8000
+  ingressClassName: nginx
 EOF
 
 # Wait for the pod to be ready
@@ -136,7 +167,4 @@ while [ $READY -eq 0 ]; do
     fi
 done
 
-# Port-forward
-echo "Setting up port-forwarding to access the service..."
-kubectl port-forward service/sitevisor-backend-service 4000:8000 &
-echo "Application should be accessible at http://localhost:4000"
+echo "Application should be accessible at http://localhost:8000"
