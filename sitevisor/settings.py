@@ -31,8 +31,7 @@ SECRET_KEY =  os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["sitevisor.local"]
-
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost').split(',')
 
 # Application definition
 
@@ -81,12 +80,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'sitevisor.wsgi.application'
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5432',
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'http://sitevisor.local'
-]
+CORS_ALLOWED_ORIGINS = os.getenv('DJANGO_CORS_ALLOWED_ORIGINS',
+                                 'http://localhost:5173').split(',')
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
