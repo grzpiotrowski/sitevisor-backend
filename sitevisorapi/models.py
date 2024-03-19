@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 
 class Project(models.Model):
     name = models.CharField(max_length=255)
+    kafka_topics = models.CharField(max_length=1024, default='')
     owner = models.ForeignKey(User, related_name='owned_projects', on_delete=models.CASCADE)
 
     def __str__(self):

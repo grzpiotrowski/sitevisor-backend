@@ -10,5 +10,5 @@ class SerializerTestCase(TestCase):
 
     def test_project_serializer(self):
         project_data = ProjectSerializer(instance=self.project).data
-        expected_keys = {'id', 'name', 'owner', 'rooms', 'sensors'}
+        expected_keys = {'id', 'name', 'kafka_topics', 'owner', 'rooms', 'sensors'}
         self.assertEqual(set(project_data.keys()), expected_keys)

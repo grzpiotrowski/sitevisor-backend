@@ -101,7 +101,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ['id', 'name', 'owner', 'rooms', 'sensors']
+        fields = ['id', 'name', 'kafka_topics', 'owner', 'rooms', 'sensors']
 
     def create(self, validated_data):
         user = self.context['request'].user

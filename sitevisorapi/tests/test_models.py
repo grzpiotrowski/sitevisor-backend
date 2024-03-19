@@ -5,7 +5,7 @@ from ..models import Project, Room, Point, Sensor
 class ModelTestCase(TestCase):
     def setUp(self):
         self.user = User.objects.create(username='homer', password='secret123')
-        self.project = Project.objects.create(name='Homer Project', owner=self.user)
+        self.project = Project.objects.create(name='Homer Project', owner=self.user, kafka_topics='my_topic')
         self.point1 = Point.objects.create(x=4.0, y=0.0, z=9.0)
         self.point2 = Point.objects.create(x=-1.0, y=0.0, z=-1.0)
         self.sensorPosition = Point.objects.create(x=1.0, y=0.0, z=-3.5)
