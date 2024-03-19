@@ -10,7 +10,7 @@ class ModelTestCase(TestCase):
         self.point2 = Point.objects.create(x=-1.0, y=0.0, z=-1.0)
         self.sensorPosition = Point.objects.create(x=1.0, y=0.0, z=-3.5)
         self.room = Room.objects.create(name='Living Room', level=1, color=0xFFFFFF, opacity=0.7, point1=self.point1, point2=self.point2, project=self.project)
-        self.sensor = Sensor.objects.create(name='Thermometer', level=1, position=self.point1, project=self.project)
+        self.sensor = Sensor.objects.create(name='Thermometer', device_id='sensor-123', level=1, position=self.point1, project=self.project)
 
     def test_models_str(self):
         self.assertEqual(str(self.project), 'Homer Project')

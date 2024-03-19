@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 from datetime import timedelta
 
 # Load environment variables from the .env file
-load_dotenv()
+load_dotenv(override=True)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -86,7 +86,6 @@ CORS_ALLOWED_ORIGINS = os.getenv('DJANGO_CORS_ALLOWED_ORIGINS',
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
 if os.getenv('DJANGO_ENV') == 'test':
     DATABASES = {
         'default': {
