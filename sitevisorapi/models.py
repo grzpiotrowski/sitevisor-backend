@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 
 class Project(models.Model):
     name = models.CharField(max_length=255)
+    kafka_topics = models.CharField(max_length=1024, blank=True, default='')
     owner = models.ForeignKey(User, related_name='owned_projects', on_delete=models.CASCADE)
 
     def __str__(self):
@@ -28,6 +29,7 @@ class Room(models.Model):
 
 class Sensor(models.Model):
     name = models.CharField(max_length=255)
+    device_id = models.CharField(max_length=255)
     level = models.IntegerField()
     position = models.ForeignKey(Point, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, related_name='sensors', on_delete=models.CASCADE)

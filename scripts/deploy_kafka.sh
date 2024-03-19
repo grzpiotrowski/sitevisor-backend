@@ -1,24 +1,21 @@
-# Creating an Apache Kafka cluster
+#!/bin/bash
 
-## Prerequisites
-- Added `127.0.0.1 sitevisor.local` ìn `/etc/hosts`
+# Exit script on error
+set -e
 
-**Create a `kafka` namespace:**
-```bash
-kubectl create namespace kafka
-```
+HOSTNAME="sitevisor.local"
 
-**Apply the Strimzi install files:**
-```bash
+# Create kafka namespace
+echo "Creating 'kafka' namespace..."
+kubectl create namespace kafka || echo "'kafka' namespace already exists"
+
+# Apply Strimzi install files
+echo "Applying Strimzi install files..."
 kubectl create -f 'https://strimzi.io/install/latest?namespace=kafka' -n kafka
-```
 
-**Create a new Kafka custom resource:**
-
-This sets up a small persistent Apache Kafka Cluster with one node for Apache Zookeeper and Apache Kafka:
-
-```bash
-echo "
+# Deploy Kafka cluster
+echo "Deploying Kafka cluster..."
+cat <<EOF | kubectl apply -n kafka -f -
 apiVersion: kafka.strimzi.io/v1beta2
 kind: Kafka
 metadata:
@@ -59,12 +56,11 @@ spec:
   entityOperator:
     topicOperator: {}
     userOperator: {}
-" | kubectl apply -n kafka -f -
-```
+EOF
 
-**Create the KafkaBridge resource:**
-```bash
-echo "
+# Deploy KafkaBridge
+echo "Deploying Kafka Bridge..."
+cat <<EOF | kubectl apply -n kafka -f -
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaBridge
 metadata:
@@ -75,27 +71,17 @@ spec:
   bootstrapServers: kafka-sitevisor-cluster-kafka-bootstrap:9092
   http:
     port: 8088
-    cors:
-      allowedMethods:
-        - GET
-        - POST
-        - DELETE
-        - ACCEPT
-        - OPTIONS
-      allowedOrigins:
-        - 'http://localhost:5173'
   consumer:
     config:
       auto.offset.reset: earliest
   producer:
     config:
       delivery.timeout.ms: 300000
-" | kubectl apply -f -
-```
+EOF
 
-**Expose KafkaBridge Service:**
-```bash
-echo "
+# Expose KafkaBridge Service
+echo "Exposing Kafka Bridge Service..."
+cat <<EOF | kubectl apply -n kafka -f -
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -103,7 +89,7 @@ metadata:
   namespace: kafka
 spec:
   rules:
-  - host: sitevisor.local
+  - host: ${HOSTNAME}
     http:
       paths:
       - path: /topics
@@ -114,12 +100,11 @@ spec:
             port:
               number: 8088
   ingressClassName: nginx
-" | kubectl apply -f -
-```
+EOF
 
-**Create a test Kafka Topic:**
-```bash
-echo "
+# Create a test Kafka Topic
+echo "Creating a test Kafka Topic..."
+cat <<EOF | kubectl create -n kafka -f -
 apiVersion: kafka.strimzi.io/v1beta1
 kind: KafkaTopic
 metadata:
@@ -130,12 +115,12 @@ metadata:
 spec:
   partitions: 3
   replicas: 1
-" | kubectl create -f -
-```
+EOF
 
-**Curl a test message to Kafka:**
-```bash
-curl -X POST http://sitevisor.local:8080/topics/my-topic \
+# Send a test message to Kafka
+echo "Sending a test message to Kafka..."
+curl -X POST http://${HOSTNAME}:8080/topics/my-topic \
      -H "Content-Type: application/vnd.kafka.json.v2+json" \
      --data '{"records": [{"value": "Test message..."}]}'
-```
+     
+echo "Kafka deployment and test completed."

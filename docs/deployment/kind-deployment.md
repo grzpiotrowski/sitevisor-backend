@@ -1,17 +1,9 @@
-# Deploying the backend in Kind
+# Deploying the SiteVisor Backend
 
 ## Prerequisites
 - Docker: Ensure **Docker** is installed on your system. You can download and install Docker from [Docker's official website](https://www.docker.com/get-started/).
 - Kind: Install **kind** on your machine. Follow the installation instructions on the [kind website](https://kind.sigs.k8s.io/docs/user/quick-start/#installation).
-
-
-## Kind deployment
-**Create the Kind cluster:**
-
-Skip this step if you are deploying to already existing cluster
-```bash
-kind create cluster
-```
+- Added `127.0.0.1 sitevisor.local` ìn `/etc/hosts`
 
 **Build and Load the Docker Image into kind:**
 ```bash
@@ -63,23 +55,42 @@ spec:
   selector:
     app: sitevisor-backend
   ports:
-    - protocol: TCP
-      port: 8000
-      targetPort: 8000
-  type: NodePort
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000
 " | kubectl apply -f -
 ```
 
-**Set up port forwarding to access the service in Kind cluster:**
+**Ingress for SiteVisor backend:**
 ```bash
-kubectl port-forward service/sitevisor-backend-service 4000:8000
+echo "
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sitevisor-backend-ingress
+spec:
+  rules:
+  - host: sitevisor.local
+    http:
+      paths:
+      - pathType: Prefix
+        path: /api
+        backend:
+          service:
+            name: sitevisor-backend-service
+            port:
+              number: 8000
+      - pathType: Prefix
+        path: /static/rest_framework
+        backend:
+          service:
+            name: sitevisor-backend-service
+            port:
+              number: 8000
+  ingressClassName: nginx
+" | kubectl apply -f -
 ```
 
-**Access the application:**
+**Access the application's backend API:**
 
-Open your browser and go to http://localhost:4000.
-
-**Cleanup**
-```bash
-kind delete cluster
-```
+Open your browser and go to http://sitevisor.local:8080/api/

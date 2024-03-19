@@ -14,3 +14,10 @@ This is the backend server for the [SiteVisor](https://github.com/grzpiotrowski/
 - [Confluent - Developer - Getting Started with Apache Kafka and Python](https://developer.confluent.io/get-started/python/#build-consumer)
 - [Alex Diaconu - Ably - How to stream Kafka messages to Internet-facing clients over WebSockets](https://ably.com/topic/websockets-kafka)
 - [Ghalegaurav - Scalable Backend and Real-Time Data Streaming in Logistics with Apache Kafka, NodeJs, React Js, and WebSockets - Medium](https://medium.com/@ghalegaurav/scalable-backend-and-real-time-data-streaming-in-logistics-with-apache-kafka-nodejs-react-js-and-5d46bddbd085)
+
+## Strimzi
+- [Accessing Kafka: Part 2 - Node ports](https://strimzi.io/blog/2019/04/23/accessing-kafka-part-2/)
+
+# NGINX
+- [Kubernetes Ingress-Nginx Controller](https://kubernetes.github.io/ingress-nginx/deploy/)
+- [Ajay M - Using websockets with the Nginx Kubernetes ingress controller](https://www.civo.com/learn/using-websockets-with-ingress-controller)
