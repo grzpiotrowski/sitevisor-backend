@@ -1,5 +1,10 @@
 # PostgreSQL deployment
 
+This section provides steps required to deploy the CloudNativePG operator which manages PostgreSQL workloads on Kubernetes cluster.
+
+## Prerequisites
+- Running Kind cluster
+
 **Create a Namespace for the PostgreSQL Operator:**
 ```bash
 kubectl create namespace postgres-operator

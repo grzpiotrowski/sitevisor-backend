@@ -1,6 +1,7 @@
 # Creating an Apache Kafka cluster
 
 ## Prerequisites
+- Running Kind cluster
 - Added `127.0.0.1 sitevisor.local` ìn `/etc/hosts`
 
 **Create a `kafka` namespace:**

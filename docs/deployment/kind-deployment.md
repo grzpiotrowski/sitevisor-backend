@@ -1,8 +1,8 @@
 # Deploying the SiteVisor Backend
 
 ## Prerequisites
-- Docker: Ensure **Docker** is installed on your system. You can download and install Docker from [Docker's official website](https://www.docker.com/get-started/).
-- Kind: Install **kind** on your machine. Follow the installation instructions on the [kind website](https://kind.sigs.k8s.io/docs/user/quick-start/#installation).
+- Running Kind cluster
+- PostgreSQL database deployed
 - Added `127.0.0.1 sitevisor.local` ìn `/etc/hosts`
 
 **Build and Load the Docker Image into kind:**
