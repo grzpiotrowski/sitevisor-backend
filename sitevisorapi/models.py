@@ -31,6 +31,7 @@ class Sensor(models.Model):
     name = models.CharField(max_length=255)
     device_id = models.CharField(max_length=255)
     level = models.IntegerField()
+    type = models.CharField(max_length=255)
     position = models.ForeignKey(Point, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, related_name='sensors', on_delete=models.CASCADE)
 

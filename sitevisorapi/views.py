@@ -40,8 +40,14 @@ class SensorViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         project_id = self.request.query_params.get('project_id')
+        sensor_type = self.request.query_params.get('type')
+
         if project_id is not None:
             queryset = queryset.filter(project_id=project_id)
+        
+        if sensor_type is not None:
+            queryset = queryset.filter(type=sensor_type)
+
         return queryset
 
 class ProjectViewSet(viewsets.ModelViewSet):

@@ -64,7 +64,7 @@ class SensorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Sensor
-        fields = ['id', 'name', 'device_id', 'project', 'level', 'position']
+        fields = ['id', 'name', 'device_id', 'project', 'level', 'type', 'position']
 
     def create(self, validated_data):
         position_data = validated_data.pop('position')
@@ -78,6 +78,7 @@ class SensorSerializer(serializers.ModelSerializer):
         instance.name = validated_data.get('name', instance.name)
         instance.device_id = validated_data.get('device_id', instance.device_id)
         instance.level = validated_data.get('level', instance.level)
+        instance.level = validated_data.get('type', instance.type)
 
         # Update position
         position = instance.position
