@@ -46,3 +46,77 @@ spec:
         name: sitevisor-user-secret
 " | kubectl apply -f -
 ```
+
+## Inspecting the database
+
+Create a new Pod which will act as a debug access point:
+```bash
+echo "
+apiVersion: v1
+kind: Pod
+metadata:
+  name: postgres-debug-pod
+  namespace: postgres-operator
+spec:
+  containers:
+  - name: debug-container
+    image: postgres:16.2
+    command: ['sleep', 'infinity']
+  restartPolicy: Always
+" | kubectl apply -f -
+```
+
+Check if the Pod is ready:
+```bash
+kubectl get pod/postgres-debug-pod -n postgres-operator
+```
+
+Access the container:
+```bash
+kubectl exec -it postgres-debug-pod -n postgres-operator -- /bin/bash
+```
+
+Connect to PostgreSQL database with `psql`. Use the password set when deploying PostgreSQL cluster.
+```bash
+psql -U sitevisoruser -d sitevisordb -h sitevisor-db-cluster-rw.postgres-operator
+```
+
+Inspect the database:
+```bash
+\dt
+```
+
+This should give you a list of tables:
+```
+                         List of relations
+ Schema |               Name               | Type  |     Owner
+--------+----------------------------------+-------+---------------
+ public | auth_group                       | table | sitevisoruser
+ public | auth_group_permissions           | table | sitevisoruser
+ public | auth_permission                  | table | sitevisoruser
+ public | auth_user                        | table | sitevisoruser
+ public | auth_user_groups                 | table | sitevisoruser
+ public | auth_user_user_permissions       | table | sitevisoruser
+ public | authtoken_token                  | table | sitevisoruser
+ public | django_admin_log                 | table | sitevisoruser
+ public | django_content_type              | table | sitevisoruser
+ public | django_migrations                | table | sitevisoruser
+ public | django_session                   | table | sitevisoruser
+ public | sitevisorapi_point               | table | sitevisoruser
+ public | sitevisorapi_project             | table | sitevisoruser
+ public | sitevisorapi_room                | table | sitevisoruser
+ public | sitevisorapi_sensor              | table | sitevisoruser
+ public | sitevisorapi_sensortype          | table | sitevisoruser
+ public | token_blacklist_blacklistedtoken | table | sitevisoruser
+ public | token_blacklist_outstandingtoken | table | sitevisoruser
+```
+
+Inspect a table with:
+```
+TABLE sitevisorapi_room;
+```
+
+`exit` from the pod and delete it when no longer needed:
+```bash
+kubectl delete pod/postgres-debug-pod -n postgres-operator
+```
