@@ -94,3 +94,18 @@ spec:
 **Access the application's backend API:**
 
 Open your browser and go to http://sitevisor.local:8080/api/
+
+
+## Tips
+For testing the Django backend, you can expose postgreSQL with:
+```bash
+kubectl port-forward svc/sitevisor-db-cluster-rw 5432:5432 -n postgres-operator
+```
+
+and then use `POSTGRES_HOST=localhost` in the `.env` file of Django backend. This removes the need to rebuild and load Docker container into Kind cluster while developing.
+
+Then run the Django app with:
+
+```bash
+python manage.py runserver
+```
