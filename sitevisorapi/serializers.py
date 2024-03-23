@@ -1,11 +1,16 @@
 from rest_framework import serializers
-from .models import Room, Sensor, Project, Point
+from .models import Room, Sensor, Project, Point, SensorType
 from django.contrib.auth.models import User
 
 class PointSerializer(serializers.ModelSerializer):
     class Meta:
         model = Point
         fields = ['id', 'x', 'y', 'z']
+
+class SensorTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SensorType
+        fields = ['id', 'name', 'project']
 
 class RoomSerializer(serializers.ModelSerializer):
     point1 = PointSerializer()
@@ -61,6 +66,7 @@ class RoomSerializer(serializers.ModelSerializer):
 
 class SensorSerializer(serializers.ModelSerializer):
     position = PointSerializer()
+    type = serializers.SlugRelatedField(slug_field='name', queryset=SensorType.objects.all())
 
     class Meta:
         model = Sensor
@@ -78,7 +84,7 @@ class SensorSerializer(serializers.ModelSerializer):
         instance.name = validated_data.get('name', instance.name)
         instance.device_id = validated_data.get('device_id', instance.device_id)
         instance.level = validated_data.get('level', instance.level)
-        instance.level = validated_data.get('type', instance.type)
+        instance.type = validated_data.get('type', instance.type)
 
         # Update position
         position = instance.position

@@ -14,6 +14,13 @@ class Point(models.Model):
     y = models.FloatField()
     z = models.FloatField()
 
+class SensorType(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    project = models.ForeignKey(Project, related_name='sensor_types', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
 class Room(models.Model):
     name = models.CharField(max_length=255)
     level = models.IntegerField()
@@ -31,7 +38,7 @@ class Sensor(models.Model):
     name = models.CharField(max_length=255)
     device_id = models.CharField(max_length=255)
     level = models.IntegerField()
-    type = models.CharField(max_length=255)
+    type = models.ForeignKey(SensorType, on_delete=models.CASCADE, related_name='sensors')
     position = models.ForeignKey(Point, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, related_name='sensors', on_delete=models.CASCADE)
 

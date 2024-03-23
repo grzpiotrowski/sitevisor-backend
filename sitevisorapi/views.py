@@ -2,14 +2,26 @@ from rest_framework import viewsets
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
-from .models import Room, Sensor, Project
-from .serializers import RoomSerializer, SensorSerializer, ProjectSerializer, UserRegistrationSerializer
+from .models import Room, Sensor, Project, SensorType
+from .serializers import RoomSerializer, SensorSerializer, ProjectSerializer, SensorTypeSerializer, UserRegistrationSerializer
 from django.contrib.auth.models import User
 from rest_framework.response import Response
 from rest_framework import status
 from django.http import HttpResponse
 import requests
 from django.conf import settings
+
+class SensorTypeViewSet(viewsets.ModelViewSet):
+    queryset = SensorType.objects.all()
+    serializer_class = SensorTypeSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        project_id = self.request.query_params.get('project_id')
+        if project_id is not None:
+            queryset = queryset.filter(project_id=project_id)
+        return queryset
 
 class RoomViewSet(viewsets.ModelViewSet):
     queryset = Room.objects.all()
