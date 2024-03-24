@@ -14,6 +14,9 @@ class Point(models.Model):
     y = models.FloatField()
     z = models.FloatField()
 
+    def __str__(self):
+        return  f'({self.x}, {self.y}, {self.z})'
+
 class SensorType(models.Model):
     name = models.CharField(max_length=255)
     project = models.ForeignKey(Project, related_name='sensor_types', on_delete=models.CASCADE)

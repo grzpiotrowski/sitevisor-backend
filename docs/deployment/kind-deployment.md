@@ -109,3 +109,11 @@ Then run the Django app with:
 ```bash
 python manage.py runserver
 ```
+
+### Tests
+
+To run tests set the env variable `DJANGO_ENV='dev'`. This uses local SQLite database.
+Then run:
+```bash
+python manage.py test -v 2
+```
