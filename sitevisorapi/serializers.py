@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Room, Sensor, Project, Point, SensorType
 from django.contrib.auth.models import User
+from rest_framework.exceptions import ValidationError
 
 class PointSerializer(serializers.ModelSerializer):
     class Meta:
@@ -64,36 +65,55 @@ class RoomSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+class SensorTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SensorType
+        fields = ['id', 'name', 'project']
+
 class SensorSerializer(serializers.ModelSerializer):
+    # For creating a sensor, accept a SensorType ID
+    type_id = serializers.PrimaryKeyRelatedField(
+        write_only=True,
+        queryset=SensorType.objects.all(),
+        source='type'
+    )
+    
+    # For reading sensor data, return the whole SensorType object
+    type = SensorTypeSerializer(read_only=True)
     position = PointSerializer()
-    type = serializers.SlugRelatedField(slug_field='name', queryset=SensorType.objects.all())
 
     class Meta:
         model = Sensor
-        fields = ['id', 'name', 'device_id', 'project', 'level', 'type', 'position']
+        fields = ['id', 'name', 'device_id', 'project', 'level', 'type', 'type_id', 'position']
 
     def create(self, validated_data):
         position_data = validated_data.pop('position')
+
         position = Point.objects.create(**position_data)
         sensor = Sensor.objects.create(**validated_data, position=position)
         return sensor
 
     def update(self, instance, validated_data):
-        position_data = validated_data.pop('position')
-        
-        instance.name = validated_data.get('name', instance.name)
-        instance.device_id = validated_data.get('device_id', instance.device_id)
-        instance.level = validated_data.get('level', instance.level)
-        instance.type = validated_data.get('type', instance.type)
+        sensor_type = validated_data.pop('type', None)
 
-        # Update position
-        position = instance.position
-        position.x = position_data.get('x', position.x)
-        position.y = position_data.get('y', position.y)
-        position.z = position_data.get('z', position.z)
-        position.save()
+        if sensor_type:
+            # Ensure the sensor_type is an instance of SensorType
+            if not isinstance(sensor_type, SensorType):
+                raise ValidationError({'type_id': ['Invalid sensor type.']})
+            instance.type = sensor_type
 
+        # Handle position update if provided
+        position_data = validated_data.pop('position', None)
+        if position_data:
+            for attr, value in position_data.items():
+                setattr(instance.position, attr, value)
+            instance.position.save()
+
+        # Update other fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
         instance.save()
+
         return instance
 
 class UserSerializer(serializers.ModelSerializer):
