@@ -14,6 +14,20 @@ class Point(models.Model):
     y = models.FloatField()
     z = models.FloatField()
 
+    def __str__(self):
+        return  f'({self.x}, {self.y}, {self.z})'
+
+class SensorType(models.Model):
+    name = models.CharField(max_length=255)
+    project = models.ForeignKey(Project, related_name='sensor_types', on_delete=models.CASCADE)
+
+    class Meta:
+        # Composite unique constraint
+        unique_together = ('name', 'project')
+
+    def __str__(self):
+        return f'{self.project.name} - {self.name}'
+
 class Room(models.Model):
     name = models.CharField(max_length=255)
     level = models.IntegerField()
@@ -31,6 +45,7 @@ class Sensor(models.Model):
     name = models.CharField(max_length=255)
     device_id = models.CharField(max_length=255)
     level = models.IntegerField()
+    type = models.ForeignKey(SensorType, on_delete=models.CASCADE, related_name='sensors')
     position = models.ForeignKey(Point, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, related_name='sensors', on_delete=models.CASCADE)
 
