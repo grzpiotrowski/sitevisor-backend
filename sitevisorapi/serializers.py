@@ -120,8 +120,12 @@ class SensorSerializer(serializers.ModelSerializer):
 class IssueSerializer(serializers.ModelSerializer):
     creator = serializers.ReadOnlyField(source='creator.username')
     assignee = serializers.SlugRelatedField(slug_field='username', queryset=User.objects.all(), required=False, allow_null=True)
-    object_type = serializers.CharField(write_only=True)
-    object_id = serializers.IntegerField(write_only=True)
+    object_id = serializers.IntegerField()
+    object_type = serializers.SerializerMethodField()
+
+    def get_object_type(self, obj):
+        # Return name of the model for the related object.
+        return obj.content_type.model    
 
     def to_internal_value(self, data):
         # Convert the model name string in 'object_type' to a ContentType instance.
