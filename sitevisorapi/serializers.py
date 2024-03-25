@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Room, Sensor, Project, Point, SensorType
+from .models import Issue, Room, Sensor, Project, Point, SensorType
 from django.contrib.auth.models import User
 from rest_framework.exceptions import ValidationError
 
@@ -115,6 +115,24 @@ class SensorSerializer(serializers.ModelSerializer):
         instance.save()
 
         return instance
+    
+class IssueSerializer(serializers.ModelSerializer):
+    creator = serializers.ReadOnlyField(source='creator.username')
+    assignee = serializers.SlugRelatedField(slug_field='username', queryset=User.objects.all(), required=False, allow_null=True)
+
+    def validate(self, data):
+        content_type = data.get('content_type')
+
+        # Validate content_type to ensure it's from the 'sitevisorapi' app
+        if content_type.app_label != 'sitevisorapi':
+            raise ValidationError("ContentType must be from the sitevisorapi app.")
+
+        return data
+
+    class Meta:
+        model = Issue
+        fields = ['id', 'title', 'description', 'status', 'created_at', 'updated_at', 'creator', 'assignee', 'content_type', 'object_id']
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

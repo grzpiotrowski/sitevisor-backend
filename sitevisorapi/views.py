@@ -2,11 +2,12 @@ from rest_framework import viewsets
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
-from .models import Room, Sensor, Project, SensorType
-from .serializers import RoomSerializer, SensorSerializer, ProjectSerializer, SensorTypeSerializer, UserRegistrationSerializer
+from .models import Issue, Room, Sensor, Project, SensorType
+from .serializers import IssueSerializer, RoomSerializer, SensorSerializer, ProjectSerializer, SensorTypeSerializer, UserRegistrationSerializer
 from django.contrib.auth.models import User
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.decorators import action
 from django.http import HttpResponse
 import requests
 from django.conf import settings
@@ -70,6 +71,22 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         return Project.objects.filter(owner=user)
+    
+class IssueViewSet(viewsets.ModelViewSet):
+    queryset = Issue.objects.all()
+    serializer_class = IssueSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(creator=self.request.user)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def assign(self, request, pk=None):
+        issue = self.get_object()
+        assignee = User.objects.get(username=request.data.get('username'))
+        issue.assignee = assignee
+        issue.save()
+        return Response({'status': 'issue assigned'})
 
 class RegistrationAPIView(CreateAPIView):
     serializer_class = UserRegistrationSerializer
