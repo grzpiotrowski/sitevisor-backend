@@ -153,7 +153,7 @@ class IssueSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Issue
-        fields = ['id', 'title', 'description', 'status', 'created_at', 'updated_at', 'creator', 'assignee', 'object_type', 'object_id']
+        fields = ['id', 'title', 'description', 'status', 'created_at', 'updated_at', 'creator', 'assignee', 'object_type', 'object_id', 'project']
 
 
 class UserSerializer(serializers.ModelSerializer):

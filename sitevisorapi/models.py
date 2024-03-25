@@ -62,6 +62,7 @@ class Issue(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     creator = models.ForeignKey(User, related_name='created_issues', on_delete=models.CASCADE)
     assignee = models.ForeignKey(User, related_name='assigned_issues', null=True, blank=True, on_delete=models.SET_NULL)
+    project = models.ForeignKey(Project, related_name='issues', on_delete=models.CASCADE)
     # Relation fields to associate with any object - sensor, room etc.
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()

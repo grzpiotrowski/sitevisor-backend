@@ -80,6 +80,13 @@ class IssueViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user)
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        project_id = self.request.query_params.get('project_id')
+        if project_id is not None:
+            queryset = queryset.filter(project_id=project_id)
+        return queryset
+
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def assign(self, request, pk=None):
         issue = self.get_object()
