@@ -31,7 +31,8 @@ class SerializerTestCase(TestCase):
             level=1, 
             type=self.sensorType, 
             position=self.sensorPosition, 
-            project=self.project
+            project=self.project,
+            room=self.room
         )
 
     def test_project_serializer(self):
@@ -52,13 +53,13 @@ class SerializerTestCase(TestCase):
 
     def test_room_serializer(self):
         room_data = RoomSerializer(instance=self.room).data
-        expected_keys = {'id', 'name', 'project', 'level', 'color', 'opacity', 'point1', 'point2', 'height'}
+        expected_keys = {'id', 'name', 'project', 'level', 'color', 'opacity', 'point1', 'point2', 'height', 'sensors'}
         self.assertEqual(set(room_data.keys()), expected_keys)
         self.assertEqual(room_data['color'], '#ffffff')
 
     def test_sensor_serializer(self):
         sensor_data = SensorSerializer(instance=self.sensor).data
-        expected_keys = {'id', 'name', 'device_id', 'project', 'level', 'type', 'position'}
+        expected_keys = {'id', 'name', 'device_id', 'project', 'level', 'type', 'position', 'room'}
         self.assertEqual(set(sensor_data.keys()), expected_keys)
         self.assertTrue('type_id' not in sensor_data)  # type_id is write-only
         self.assertEqual(sensor_data['type']['name'], 'Temperature')
@@ -79,6 +80,39 @@ class SerializerTestCase(TestCase):
         self.assertEqual(new_room.name, 'Test Room')
         self.assertEqual(new_room.color, 0xFF0000)
 
+    def test_room_serializer_update_without_changing_points(self):
+        updated_name = 'Updated Room Name'
+        updated_opacity = 0.9
+        room_serializer = RoomSerializer(instance=self.room, data={
+            'name': updated_name,
+            'opacity': updated_opacity,
+            # Not providing new data for point1 and point2
+        }, partial=True)
+        self.assertTrue(room_serializer.is_valid(), room_serializer.errors)
+        updated_room = room_serializer.save()
+        self.assertEqual(updated_room.name, updated_name)
+        self.assertEqual(updated_room.opacity, updated_opacity)
+        # Verify that points remain unchanged
+        self.assertEqual(updated_room.point1, self.point1)
+        self.assertEqual(updated_room.point2, self.point2)
+
+    def test_room_serializer_update_with_new_points(self):
+        new_point1_data = {'x': 10.0, 'y': 20.0, 'z': 30.0}
+        new_point2_data = {'x': -10.0, 'y': -20.0, 'z': -30.0}
+        room_serializer = RoomSerializer(instance=self.room, data={
+            'point1': new_point1_data,
+            'point2': new_point2_data,
+        }, partial=True)
+        self.assertTrue(room_serializer.is_valid(), room_serializer.errors)
+        updated_room = room_serializer.save()
+        # Verify that points have been updated
+        self.assertEqual(updated_room.point1.x, new_point1_data['x'])
+        self.assertEqual(updated_room.point1.y, new_point1_data['y'])
+        self.assertEqual(updated_room.point1.z, new_point1_data['z'])
+        self.assertEqual(updated_room.point2.x, new_point2_data['x'])
+        self.assertEqual(updated_room.point2.y, new_point2_data['y'])
+        self.assertEqual(updated_room.point2.z, new_point2_data['z'])
+
     def test_sensor_serializer_creation(self):
         sensor_serializer = SensorSerializer(data={
             'name': 'New Sensor', 
@@ -95,8 +129,8 @@ class SerializerTestCase(TestCase):
 
 class IssueSerializerTestCase(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='lisa', password='secret123')
-        self.project = Project.objects.create(name='Lisa Project', owner=self.user, kafka_topics='topics')
+        self.user = User.objects.create_user(username='bart', password='secret123')
+        self.project = Project.objects.create(name='Bart Project', owner=self.user, kafka_topics='my-topic')
         self.point = Point.objects.create(x=1.0, y=2.0, z=3.0)
         self.sensorType = SensorType.objects.create(name='Humidity', project=self.project)
         self.sensor = Sensor.objects.create(name='Humidity Sensor', device_id='sensor-001', level=1, type=self.sensorType, position=self.point, project=self.project)

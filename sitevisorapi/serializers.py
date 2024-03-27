@@ -14,58 +14,6 @@ class SensorTypeSerializer(serializers.ModelSerializer):
         model = SensorType
         fields = ['id', 'name', 'project']
 
-class RoomSerializer(serializers.ModelSerializer):
-    point1 = PointSerializer()
-    point2 = PointSerializer()
-
-    class Meta:
-        model = Room
-        fields = ['id', 'name', 'project', 'level', 'color', 'opacity', 'point1', 'point2', 'height']
-
-    def to_representation(self, instance):
-        ret = super().to_representation(instance)
-        ret['color'] = f'#{instance.color:06x}'
-        return ret
-
-    def to_internal_value(self, data):
-        if 'color' in data and isinstance(data['color'], str):
-            data['color'] = int(data['color'].lstrip('#'), 16)
-        return super().to_internal_value(data)
-
-    def create(self, validated_data):
-        point1_data = validated_data.pop('point1')
-        point2_data = validated_data.pop('point2')
-        point1 = Point.objects.create(**point1_data)
-        point2 = Point.objects.create(**point2_data)
-        room = Room.objects.create(**validated_data, point1=point1, point2=point2)
-        return room
-
-    def update(self, instance, validated_data):
-        point1_data = validated_data.pop('point1')
-        point2_data = validated_data.pop('point2')
-        
-        instance.name = validated_data.get('name', instance.name)
-        instance.level = validated_data.get('level', instance.level)
-        instance.color = validated_data.get('color', instance.color)
-        instance.opacity = validated_data.get('opacity', instance.opacity)
-        instance.height = validated_data.get('height', instance.height)
-
-        # Update point1 and point2
-        point1 = instance.point1
-        point2 = instance.point2
-        point1.x = point1_data.get('x', point1.x)
-        point1.y = point1_data.get('y', point1.y)
-        point1.z = point1_data.get('z', point1.z)
-        point1.save()
-
-        point2.x = point2_data.get('x', point2.x)
-        point2.y = point2_data.get('y', point2.y)
-        point2.z = point2_data.get('z', point2.z)
-        point2.save()
-
-        instance.save()
-        return instance
-
 class SensorTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = SensorType
@@ -82,10 +30,11 @@ class SensorSerializer(serializers.ModelSerializer):
     # For reading sensor data, return the whole SensorType object
     type = SensorTypeSerializer(read_only=True)
     position = PointSerializer()
+    room = serializers.PrimaryKeyRelatedField(queryset=Room.objects.all(), required=False, allow_null=True)
 
     class Meta:
         model = Sensor
-        fields = ['id', 'name', 'device_id', 'project', 'level', 'type', 'type_id', 'position']
+        fields = ['id', 'name', 'device_id', 'project', 'level', 'type', 'type_id', 'position', 'room']
 
     def create(self, validated_data):
         position_data = validated_data.pop('position')
@@ -116,7 +65,56 @@ class SensorSerializer(serializers.ModelSerializer):
         instance.save()
 
         return instance
-    
+
+class RoomSerializer(serializers.ModelSerializer):
+    point1 = PointSerializer()
+    point2 = PointSerializer()
+    sensors = SensorSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Room
+        fields = ['id', 'name', 'project', 'level', 'color', 'opacity', 'point1', 'point2', 'height', 'sensors']
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret['color'] = f'#{instance.color:06x}'
+        return ret
+
+    def to_internal_value(self, data):
+        if 'color' in data and isinstance(data['color'], str):
+            data['color'] = int(data['color'].lstrip('#'), 16)
+        return super().to_internal_value(data)
+
+    def create(self, validated_data):
+        point1_data = validated_data.pop('point1')
+        point2_data = validated_data.pop('point2')
+        point1 = Point.objects.create(**point1_data)
+        point2 = Point.objects.create(**point2_data)
+        room = Room.objects.create(**validated_data, point1=point1, point2=point2)
+        return room
+
+    def update(self, instance, validated_data):
+        # Handle point1 update if provided
+        point1_data = validated_data.pop('point1', None)
+        if point1_data:
+            for attr, value in point1_data.items():
+                setattr(instance.point1, attr, value)
+            instance.point1.save()
+
+        # Handle point2 update if provided
+        point2_data = validated_data.pop('point2', None)
+        if point2_data:
+            for attr, value in point2_data.items():
+                setattr(instance.point2, attr, value)
+            instance.point2.save()
+
+        # Update other fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        return instance
+
 class IssueSerializer(serializers.ModelSerializer):
     creator = serializers.ReadOnlyField(source='creator.username')
     assignee = serializers.SlugRelatedField(slug_field='username', queryset=User.objects.all(), required=False, allow_null=True)

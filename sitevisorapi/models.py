@@ -50,6 +50,7 @@ class Sensor(models.Model):
     type = models.ForeignKey(SensorType, on_delete=models.CASCADE, related_name='sensors')
     position = models.ForeignKey(Point, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, related_name='sensors', on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, related_name='sensors', on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return self.name

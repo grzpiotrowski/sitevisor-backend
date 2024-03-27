@@ -53,14 +53,23 @@ class SensorViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        project_id = self.request.query_params.get('project_id')
-        sensor_type = self.request.query_params.get('type')
+        params = self.request.query_params
 
+        project_id = params.get('project_id')
         if project_id is not None:
             queryset = queryset.filter(project_id=project_id)
-        
+
+        sensor_type = params.get('type')
         if sensor_type is not None:
             queryset = queryset.filter(type=sensor_type)
+
+        room_id = params.get('room_id')
+        if room_id is not None:
+            queryset = queryset.filter(room_id=room_id)
+
+        level = params.get('level')
+        if level is not None:
+            queryset = queryset.filter(level=level)
 
         return queryset
 
