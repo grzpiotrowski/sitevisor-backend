@@ -31,7 +31,8 @@ class SerializerTestCase(TestCase):
             level=1, 
             type=self.sensorType, 
             position=self.sensorPosition, 
-            project=self.project
+            project=self.project,
+            room=self.room
         )
 
     def test_project_serializer(self):
@@ -52,13 +53,13 @@ class SerializerTestCase(TestCase):
 
     def test_room_serializer(self):
         room_data = RoomSerializer(instance=self.room).data
-        expected_keys = {'id', 'name', 'project', 'level', 'color', 'opacity', 'point1', 'point2', 'height'}
+        expected_keys = {'id', 'name', 'project', 'level', 'color', 'opacity', 'point1', 'point2', 'height', 'sensors'}
         self.assertEqual(set(room_data.keys()), expected_keys)
         self.assertEqual(room_data['color'], '#ffffff')
 
     def test_sensor_serializer(self):
         sensor_data = SensorSerializer(instance=self.sensor).data
-        expected_keys = {'id', 'name', 'device_id', 'project', 'level', 'type', 'position'}
+        expected_keys = {'id', 'name', 'device_id', 'project', 'level', 'type', 'position', 'room'}
         self.assertEqual(set(sensor_data.keys()), expected_keys)
         self.assertTrue('type_id' not in sensor_data)  # type_id is write-only
         self.assertEqual(sensor_data['type']['name'], 'Temperature')
