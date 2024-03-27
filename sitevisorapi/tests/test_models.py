@@ -92,7 +92,7 @@ class IssueModelTestCase(ModelTestCase):
         self.room_issue = Issue.objects.create(
             title='Room Issue',
             description='The room temperature is not regulated properly.',
-            status='in progress',
+            status='in_progress',
             creator=self.user,
             content_object=self.room,
             project=self.project

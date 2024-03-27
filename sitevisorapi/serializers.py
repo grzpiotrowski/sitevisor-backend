@@ -41,29 +41,25 @@ class RoomSerializer(serializers.ModelSerializer):
         return room
 
     def update(self, instance, validated_data):
-        point1_data = validated_data.pop('point1')
-        point2_data = validated_data.pop('point2')
-        
-        instance.name = validated_data.get('name', instance.name)
-        instance.level = validated_data.get('level', instance.level)
-        instance.color = validated_data.get('color', instance.color)
-        instance.opacity = validated_data.get('opacity', instance.opacity)
-        instance.height = validated_data.get('height', instance.height)
+        # Handle point1 update if provided
+        point1_data = validated_data.pop('point1', None)
+        if point1_data:
+            for attr, value in point1_data.items():
+                setattr(instance.point1, attr, value)
+            instance.point1.save()
 
-        # Update point1 and point2
-        point1 = instance.point1
-        point2 = instance.point2
-        point1.x = point1_data.get('x', point1.x)
-        point1.y = point1_data.get('y', point1.y)
-        point1.z = point1_data.get('z', point1.z)
-        point1.save()
+        # Handle point2 update if provided
+        point2_data = validated_data.pop('point2', None)
+        if point2_data:
+            for attr, value in point2_data.items():
+                setattr(instance.point2, attr, value)
+            instance.point2.save()
 
-        point2.x = point2_data.get('x', point2.x)
-        point2.y = point2_data.get('y', point2.y)
-        point2.z = point2_data.get('z', point2.z)
-        point2.save()
-
+        # Update other fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
         instance.save()
+
         return instance
 
 class SensorTypeSerializer(serializers.ModelSerializer):
