@@ -84,7 +84,8 @@ class IssueModelTestCase(ModelTestCase):
             description='The sensor is not recording data.',
             status='open',
             creator=self.user,
-            content_object=self.sensor
+            content_object=self.sensor,
+            project=self.project
         )
 
         # Create an Issue related to a Room
@@ -93,7 +94,8 @@ class IssueModelTestCase(ModelTestCase):
             description='The room temperature is not regulated properly.',
             status='in progress',
             creator=self.user,
-            content_object=self.room
+            content_object=self.room,
+            project=self.project
         )
 
     def test_issue_creation(self):

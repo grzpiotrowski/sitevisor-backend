@@ -1,10 +1,10 @@
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase
-from rest_framework.test import APIClient
+from rest_framework.test import APITestCase, APIClient
 from django.urls import reverse
 from django.contrib.auth.models import User
-from ..models import Project, SensorType, Room, Sensor, Point
+from django.contrib.contenttypes.models import ContentType
+from ..models import Project, SensorType, Room, Sensor, Point, Issue
 
 class ViewTestCase(APITestCase):
     def setUp(self):
@@ -103,3 +103,58 @@ class ViewTestCase(APITestCase):
         self.assertTrue(any(sensor['type']['id'] == self.sensorType.id for sensor in response.data))
         self.assertFalse(any(sensor['type']['id'] == self.sensorType2.id for sensor in response.data))
 
+class IssueViewSetTestCase(APITestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(username='homer', password='secret123')
+        self.user2 = User.objects.create_user(username='marge', password='secret456')
+        self.project = Project.objects.create(name='The Simpsons Project', owner=self.user)
+        self.point = Point.objects.create(x=5.0, y=5.0, z=5.0)
+        self.room = Room.objects.create(name='Living Room', level=1, color=0xFFFFFF, opacity=0.5, point1=self.point, point2=self.point, project=self.project)
+        self.sensorType = SensorType.objects.create(name="Temperature", project=self.project)
+        self.sensorType2 = SensorType.objects.create(name="Vibration", project=self.project)
+        self.sensor = Sensor.objects.create(name='Temp Sensor', device_id='temp-001', level=0, type=self.sensorType, position=self.point, project=self.project)
+
+        self.issue1 = Issue.objects.create(title='Issue 1', description='First Issue', project=self.project, content_object=self.room, creator=self.user)
+        self.issue2 = Issue.objects.create(title='Issue 2', description='Second Issue', project=self.project, content_object=self.sensor, creator=self.user2)
+
+        self.client.force_authenticate(user=self.user)
+
+    def test_create_issue(self):
+        url = reverse('issue-list')
+        data = {
+            'title': 'New Issue',
+            'description': 'Something went horribly wrong with this project',
+            'project': self.project.id,
+            'object_id': self.room.id,
+            'object_type': 'room'
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Issue.objects.count(), 3)
+        self.assertEqual(Issue.objects.filter(creator=self.user).count(), 2)
+
+    def test_filter_issues_by_project(self):
+        url = reverse('issue-list') + f'?project_id={self.project.id}'
+        response = self.client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
+    def test_assign_issue(self):
+        url = reverse('issue-assign', kwargs={'pk': self.issue1.pk})
+        data = {'username': 'marge'}
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.issue1.refresh_from_db()
+        self.assertEqual(self.issue1.assignee, self.user2)
+
+    def test_filter_issues_by_assignee(self):
+        # First, assign issue2 to user2
+        self.issue2.assignee = self.user2
+        self.issue2.save()
+
+        # Filter issues by assignee (user2)
+        url = reverse('issue-list') + '?assignee=marge'
+        response = self.client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
