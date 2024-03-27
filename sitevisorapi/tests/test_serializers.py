@@ -1,7 +1,9 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
-from ..serializers import ProjectSerializer, RoomSerializer, SensorSerializer, PointSerializer, SensorTypeSerializer
-from ..models import Project, Room, Point, Sensor, SensorType
+from ..serializers import ProjectSerializer, RoomSerializer, SensorSerializer, PointSerializer, SensorTypeSerializer, IssueSerializer
+from ..models import Project, Room, Point, Sensor, SensorType, Issue
+from rest_framework.exceptions import ValidationError
+from django.contrib.contenttypes.models import ContentType
 
 class SerializerTestCase(TestCase):
     def setUp(self):
@@ -90,3 +92,81 @@ class SerializerTestCase(TestCase):
         new_sensor = sensor_serializer.save()
         self.assertEqual(new_sensor.name, 'New Sensor')
         self.assertEqual(new_sensor.type, self.sensorType)
+
+class IssueSerializerTestCase(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='lisa', password='secret123')
+        self.project = Project.objects.create(name='Lisa Project', owner=self.user, kafka_topics='topics')
+        self.point = Point.objects.create(x=1.0, y=2.0, z=3.0)
+        self.sensorType = SensorType.objects.create(name='Humidity', project=self.project)
+        self.sensor = Sensor.objects.create(name='Humidity Sensor', device_id='sensor-001', level=1, type=self.sensorType, position=self.point, project=self.project)
+        self.room = Room.objects.create(name='Conference Room', level=1, color=0xFFFFFF, opacity=0.5, point1=self.point, point2=self.point, project=self.project, height=2.5)
+
+    def test_issue_serializer_serialization(self):
+        issue = Issue.objects.create(title='Sensor Malfunction', description='A sensor is not working properly.', status='open', creator=self.user, content_object=self.sensor, project=self.project)
+        serializer = IssueSerializer(instance=issue)
+        data = serializer.data
+
+        expected_fields = {'id', 'title', 'description', 'status', 'created_at', 'updated_at', 'creator', 'assignee', 'object_type', 'object_id', 'project'}
+        self.assertEqual(set(data.keys()), expected_fields)
+        self.assertEqual(data['title'], 'Sensor Malfunction')
+        self.assertEqual(data['object_type'], 'sensor')
+
+    def test_issue_serializer_deserialization_and_creation(self):
+        issue_data = {
+            'title': 'Room Temperature Issue',
+            'description': 'The room is too cold.',
+            'status': 'open',
+            'object_type': 'room',
+            'object_id': self.room.id,
+            'project': self.project.id
+        }
+
+        # Directly testing the serializer's handling of valid data,
+        # excluding the creator from the initial data since it's read-only
+        serializer = IssueSerializer(data=issue_data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        issue = serializer.save(creator=self.user)
+
+        # Verifying the Issue instance was created correctly
+        self.assertIsInstance(issue, Issue)
+        self.assertEqual(issue.title, 'Room Temperature Issue')
+        self.assertEqual(issue.content_object, self.room)
+        self.assertEqual(issue.creator, self.user)
+
+        # Verify the serialized representation includes the creator's username
+        serialized_data = IssueSerializer(instance=issue).data
+        self.assertEqual(serialized_data['creator'], self.user.username)
+
+    def test_invalid_object_type(self):
+        issue_data = {
+            'title': 'Invalid Object Issue',
+            'description': 'Trying to associate with an invalid object type.',
+            'status': 'open',
+            'object_type': 'invalidtype',
+            'object_id': 1,
+            'project': self.project.id
+        }
+
+        serializer = IssueSerializer(data=issue_data)
+        with self.assertRaises(ValidationError) as context:
+            serializer.is_valid(raise_exception=True)
+
+        self.assertTrue('Invalid object type' in str(context.exception))
+
+    def test_issue_creation_with_content_type(self):
+        content_type = ContentType.objects.get_for_model(Sensor)
+        issue_data = {
+            'title': 'New Sensor Issue',
+            'description': 'Issue related to a sensor.',
+            'status': 'open',
+            'object_id': self.sensor.id,
+            'object_type': 'sensor',
+            'project': self.project.id
+        }
+
+        serializer = IssueSerializer(data=issue_data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        issue = serializer.save(creator=self.user)
+
+        self.assertEqual(issue.content_object, self.sensor)

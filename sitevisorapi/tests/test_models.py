@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
-from ..models import Project, Room, Point, Sensor, SensorType
+from ..models import Issue, Project, Room, Point, Sensor, SensorType
 
 class ModelTestCase(TestCase):
     def setUp(self):
@@ -73,3 +73,61 @@ class ModelTestCase(TestCase):
     def test_room_points_relationship(self):
         self.assertEqual(self.room.point1, self.point1)
         self.assertEqual(self.room.point2, self.point2)
+
+class IssueModelTestCase(ModelTestCase):
+    def setUp(self):
+        super().setUp()
+
+        # Create an Issue related to a Sensor
+        self.sensor_issue = Issue.objects.create(
+            title='Faulty Sensor',
+            description='The sensor is not recording data.',
+            status='open',
+            creator=self.user,
+            content_object=self.sensor,
+            project=self.project
+        )
+
+        # Create an Issue related to a Room
+        self.room_issue = Issue.objects.create(
+            title='Room Issue',
+            description='The room temperature is not regulated properly.',
+            status='in progress',
+            creator=self.user,
+            content_object=self.room,
+            project=self.project
+        )
+
+    def test_issue_creation(self):
+        # Verify that the Issue instances are created successfully
+        self.assertEqual(Issue.objects.count(), 2)
+
+    def test_issue_str(self):
+        # Test the string representation of Issue
+        self.assertEqual(str(self.sensor_issue), 'Faulty Sensor')
+        self.assertEqual(str(self.room_issue), 'Room Issue')
+
+    def test_issue_content_object_relation(self):
+        # Test the generic relation by verifying that issues are correctly associated with their related objects
+        sensor_issue_content_object = self.sensor_issue.content_object
+        room_issue_content_object = self.room_issue.content_object
+
+        self.assertEqual(sensor_issue_content_object, self.sensor)
+        self.assertEqual(room_issue_content_object, self.room)
+
+    def test_issue_creator_and_assignee(self):
+        # Assign an assignee to an issue and verify
+        another_user = User.objects.create_user(username='marge', password='secret123')
+        self.sensor_issue.assignee = another_user
+        self.sensor_issue.save()
+
+        self.assertEqual(self.sensor_issue.creator, self.user)
+        self.assertEqual(self.sensor_issue.assignee, another_user)
+
+    def test_issue_status_update(self):
+        # Test updating the status of an issue
+        self.sensor_issue.status = 'resolved'
+        self.sensor_issue.save()
+
+        updated_issue = Issue.objects.get(id=self.sensor_issue.id)
+        self.assertEqual(updated_issue.status, 'resolved')

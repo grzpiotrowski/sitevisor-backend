@@ -12,6 +12,7 @@ router.register(r'rooms', views.RoomViewSet)
 router.register(r'sensors', views.SensorViewSet)
 router.register(r'projects', views.ProjectViewSet)
 router.register(r'sensortypes', views.SensorTypeViewSet)
+router.register(r'issues', views.IssueViewSet)
 
 urlpatterns = [
     path('api/', include(router.urls)),

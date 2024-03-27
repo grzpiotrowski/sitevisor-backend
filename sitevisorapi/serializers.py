@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from .models import Room, Sensor, Project, Point, SensorType
+from .models import Issue, Room, Sensor, Project, Point, SensorType
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from rest_framework.exceptions import ValidationError
 
 class PointSerializer(serializers.ModelSerializer):
@@ -115,6 +116,45 @@ class SensorSerializer(serializers.ModelSerializer):
         instance.save()
 
         return instance
+    
+class IssueSerializer(serializers.ModelSerializer):
+    creator = serializers.ReadOnlyField(source='creator.username')
+    assignee = serializers.SlugRelatedField(slug_field='username', queryset=User.objects.all(), required=False, allow_null=True)
+    object_id = serializers.IntegerField()
+    object_type = serializers.SerializerMethodField()
+
+    def get_object_type(self, obj):
+        # Return name of the model for the related object.
+        return obj.content_type.model    
+
+    def to_internal_value(self, data):
+        # Convert the model name string in 'object_type' to a ContentType instance.
+        # Call the superclass method to ensure other validations are still run
+        validated_data = super().to_internal_value(data)
+        
+        model_name = data.get('object_type')
+        
+        # Fetch the ContentType object for the given model name
+        try:
+            app_label = 'sitevisorapi'
+            content_type = ContentType.objects.get(app_label=app_label, model=model_name.lower())
+        except ContentType.DoesNotExist:
+            raise ValidationError({'object_type': [f'Invalid object type: {model_name}']})
+        
+        # Set the content_type in the validated_data
+        validated_data['content_type'] = content_type
+
+        return validated_data
+
+    def create(self, validated_data):
+        # Remove 'object_type' from validated_data
+        validated_data.pop('object_type', None)
+        return Issue.objects.create(**validated_data)
+
+    class Meta:
+        model = Issue
+        fields = ['id', 'title', 'description', 'status', 'created_at', 'updated_at', 'creator', 'assignee', 'object_type', 'object_id', 'project']
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

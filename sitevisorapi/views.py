@@ -2,11 +2,13 @@ from rest_framework import viewsets
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
-from .models import Room, Sensor, Project, SensorType
-from .serializers import RoomSerializer, SensorSerializer, ProjectSerializer, SensorTypeSerializer, UserRegistrationSerializer
+from .models import Issue, Room, Sensor, Project, SensorType
+from .serializers import IssueSerializer, RoomSerializer, SensorSerializer, ProjectSerializer, SensorTypeSerializer, UserRegistrationSerializer
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.decorators import action
 from django.http import HttpResponse
 import requests
 from django.conf import settings
@@ -70,6 +72,50 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         return Project.objects.filter(owner=user)
+    
+class IssueViewSet(viewsets.ModelViewSet):
+    queryset = Issue.objects.all()
+    serializer_class = IssueSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(creator=self.request.user)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        params = self.request.query_params
+
+        # Filter by project_id
+        project_id = params.get('project_id')
+        if project_id is not None:
+            queryset = queryset.filter(project_id=project_id)
+
+        # Filter by object type and ID
+        object_type = params.get('object_type')
+        object_id = params.get('object_id')
+        if object_type and object_id:
+            content_type = ContentType.objects.get(model=object_type.lower())
+            queryset = queryset.filter(content_type=content_type, object_id=object_id)
+
+        # Filter by owner
+        owner_username = params.get('owner')
+        if owner_username:
+            queryset = queryset.filter(creator__username=owner_username)
+
+        # Filter by assignee
+        assignee_username = params.get('assignee')
+        if assignee_username:
+            queryset = queryset.filter(assignee__username=assignee_username)
+
+        return queryset
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def assign(self, request, pk=None):
+        issue = self.get_object()
+        assignee = User.objects.get(username=request.data.get('username'))
+        issue.assignee = assignee
+        issue.save()
+        return Response({'status': 'issue assigned'})
 
 class RegistrationAPIView(CreateAPIView):
     serializer_class = UserRegistrationSerializer
