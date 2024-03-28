@@ -18,6 +18,13 @@ This is the backend server for the [SiteVisor](https://github.com/grzpiotrowski/
 ## Strimzi
 - [Accessing Kafka: Part 2 - Node ports](https://strimzi.io/blog/2019/04/23/accessing-kafka-part-2/)
 
+### Kafka Connect
+- [Deploying Kafka Connect to your Kubernetes cluster](https://strimzi.io/docs/operators/latest/full/deploying#deploying-kafka-connect-str)
+- [Config - DockerOutput schema reference](https://strimzi.io/docs/operators/latest/full/configuring#type-DockerOutput-reference)
+- [Deploying KafkaConnector resources](https://strimzi.io/docs/operators/latest/full/deploying#proc-deploying-kafkaconnector-str)
+- [Debezium Documentation - Connectors - JDBC](https://debezium.io/documentation/reference/stable/connectors/jdbc.html#jdbc-deployment)
+- [Alex Soto Bueno - Deploy a Kafka Connect container using Strimzi](https://developers.redhat.com/articles/2023/03/29/deploy-kafka-connect-container-using-strimzi#configure_the_mongodb_sink_connector)
+
 # NGINX
 - [Kubernetes Ingress-Nginx Controller](https://kubernetes.github.io/ingress-nginx/deploy/)
 - [Ajay M - Using websockets with the Nginx Kubernetes ingress controller](https://www.civo.com/learn/using-websockets-with-ingress-controller)
