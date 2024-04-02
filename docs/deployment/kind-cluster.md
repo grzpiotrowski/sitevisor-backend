@@ -24,11 +24,11 @@ nodes:
   extraPortMappings:
   - containerPort: 80
     hostPort: 8080
-    listenAddress: 127.0.0.1
+    listenAddress: 0.0.0.0
     protocol: TCP
   - containerPort: 443
     hostPort: 8443
-    listenAddress: 127.0.0.1
+    listenAddress: 0.0.0.0
     protocol: TCP
 " | kind create cluster --config=-
 ```
