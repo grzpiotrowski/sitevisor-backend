@@ -1,6 +1,8 @@
 # SiteVisor Backend
 This is the backend server for the [SiteVisor](https://github.com/grzpiotrowski/sitevisor) project.
 
+Please see the [documentation pages](https://grzpiotrowski.github.io/sitevisor/) for more details.
+
 
 # Resources
 - [Django documentation](https://docs.djangoproject.com/en/5.0/)
@@ -18,6 +20,6 @@ This is the backend server for the [SiteVisor](https://github.com/grzpiotrowski/
 ## Strimzi
 - [Accessing Kafka: Part 2 - Node ports](https://strimzi.io/blog/2019/04/23/accessing-kafka-part-2/)
 
-# NGINX
+## NGINX
 - [Kubernetes Ingress-Nginx Controller](https://kubernetes.github.io/ingress-nginx/deploy/)
 - [Ajay M - Using websockets with the Nginx Kubernetes ingress controller](https://www.civo.com/learn/using-websockets-with-ingress-controller)
